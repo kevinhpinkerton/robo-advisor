@@ -1,0 +1,7 @@
+#data/.gitignore
+
+#Ignore All
+*
+
+#Except
+!.gitignore

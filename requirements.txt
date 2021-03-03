@@ -1,0 +1,5 @@
+#requirements.txt
+
+python-dotenv
+requests
+pandas
