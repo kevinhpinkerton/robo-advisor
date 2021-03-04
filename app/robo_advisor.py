@@ -1,6 +1,5 @@
 #app/robo_advisor.py
 
-import re
 import os
 from dotenv import load_dotenv
 import requests
@@ -45,7 +44,7 @@ df.columns = columns.keys()
 df = df.astype(columns)
 
 # print(df)
-# df.to_csv(f"data/prices_{ticker.lower()}.csv", index = False)
+df.to_csv(f"data/prices_{ticker.lower()}.csv", index = False)
 
 print("-------------------------")
 print("SELECTED SYMBOL: " + ticker)
@@ -55,11 +54,20 @@ print("REQUEST AT: {date:%Y-%m-%d %I:%M %p}".format(date=dt.datetime.now()))
 print("-------------------------")
 print("LATEST DAY: " + df['timestamp'][0])
 print("LATEST CLOSE: " + to_usd(df['close'][0]))
-print("RECENT HIGH: " + to_usd(df['high'][0]))
-print("RECENT LOW: " + to_usd(df['low'][0]))
+print("RECENT HIGH: " + to_usd(max(df['high'][:100])))
+print("RECENT LOW: " + to_usd(min(df['low']))) 
 print("-------------------------")
-print("RECOMMENDATION: TODO")
-print("RECOMMENDATION REASON: TODO")
+
+risk_factor = .2
+if min(df['low']) * (1 + risk_factor) > df['close'][0]:
+    recommendation = "BUY"
+    reason = "The stock's latest closing price is less than 20% above its recent low."
+else:
+    recommendation = "DO NOT BUY"
+    reason = "The stock's latest closing price is not less than 20% above its recent low."
+
+print("RECOMMENDATION: " + recommendation)
+print("RECOMMENDATION REASON: " + reason)
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
