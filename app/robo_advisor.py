@@ -10,64 +10,56 @@ import datetime as dt
 def to_usd(price):
     return f"${price:,.2f}" 
 
-def TakeInput():
+print("Each ticker is inputted individually. Hit the return key once to continue, twice to finish.")
 
-    user_ticker = input("Please input a ticker: ").upper()
-    if len(user_ticker) < 1 or len(user_ticker) > 5 or not user_ticker.isalpha():
-        print("Oh, expecting a properly-formed stock symbol like 'MSFT'. Please try again.")
-        user_ticker = TakeInput()
-
-    return(user_ticker)
-
-def CreateDataframe():
-
-    ticker = TakeInput()
-
-    api_key = os.getenv("ALPHAVANTAGE_API_KEY")
-    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={api_key}"
-
-    df = pd.DataFrame()
-    try:
-        response = requests.get(request_url)
-        parsed_response = json.loads(response.text)
-        df = pd.DataFrame.from_dict(parsed_response["Time Series (Daily)"], 'index')
-    except:
-        print("Sorry, couldn't find any trading data for that stock symbol")
-        df, ticker = CreateDataframe()
-
-    return(df, ticker)
-
-df, ticker = CreateDataframe()
-df.reset_index(inplace=True)
+api_key = os.getenv("ALPHAVANTAGE_API_KEY")
 columns = {'timestamp': str, 'open': float, 'high': float, 'low': float, 'close': float, 'volume': int}
-df.columns = columns.keys()
-df = df.astype(columns)
+risk_factor = .2
+data = dict()
 
-# print(df)
-df.to_csv(f"data/prices_{ticker.lower()}.csv", index = False)
+while True:
+    ticker = input("Input a ticker: ").upper()
+    if ticker == "":
+        break
+    elif len(ticker) < 1 or len(ticker) > 5 or not ticker.isalpha():
+        print("Expecting a properly-formed stock symbol like 'MSFT'. Try again.")
+    else:
+        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={api_key}"
+        try:
+            response = requests.get(request_url)
+            parsed_response = json.loads(response.text)
+
+            df = pd.DataFrame.from_dict(parsed_response["Time Series (Daily)"], 'index')
+            df.reset_index(inplace = True)
+            df.columns = columns.keys()
+            df = df.astype(columns)
+
+            # df.to_csv(os.path.join(os.path.dirname(__file__), "..", "data", f"prices_{ticker.lower()}.csv"), index = False)
+
+            if min(df['low']) * (1 + risk_factor) > df['close'][0]:
+                recommendation = "BUY"
+            else:
+                recommendation = "DO NOT BUY"
+                
+            data[ticker] = {
+                "LATEST DAY": df['timestamp'][0],
+                "LATEST CLOSE": to_usd(df['close'][0]),
+                "RECENT HIGH": to_usd(max(df['high'][:100])),
+                "RECENT LOW": to_usd(min(df['low'])),
+                "RECOMMENDATION": recommendation
+            }
+        except:
+            print("Sorry, couldn't get any trading data for " + ticker + ".")
 
 print("-------------------------")
-print("SELECTED SYMBOL: " + ticker)
+print("SELECTED SYMBOLS: " + ", ".join(data.keys()))
 print("-------------------------")
 print("REQUESTING STOCK MARKET DATA...")
 print("REQUEST AT: {date:%Y-%m-%d %I:%M %p}".format(date=dt.datetime.now()))
 print("-------------------------")
-print("LATEST DAY: " + df['timestamp'][0])
-print("LATEST CLOSE: " + to_usd(df['close'][0]))
-print("RECENT HIGH: " + to_usd(max(df['high'][:100])))
-print("RECENT LOW: " + to_usd(min(df['low']))) 
+print(pd.DataFrame.from_dict(data, 'index'))
 print("-------------------------")
-
-risk_factor = .2
-if min(df['low']) * (1 + risk_factor) > df['close'][0]:
-    recommendation = "BUY"
-    reason = "The stock's latest closing price is less than 20% above its recent low."
-else:
-    recommendation = "DO NOT BUY"
-    reason = "The stock's latest closing price is not less than 20% above its recent low."
-
-print("RECOMMENDATION: " + recommendation)
-print("RECOMMENDATION REASON: " + reason)
+print("Buy recommendations are issued if the stock's latest closing price is less than 20% above its recent low.")
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
