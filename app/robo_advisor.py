@@ -6,6 +6,7 @@ import requests
 import json
 import pandas as pd
 import datetime as dt
+import matplotlib.pyplot as plt
 
 def to_usd(price):
     return f"${price:,.2f}" 
@@ -35,6 +36,7 @@ while True:
             df = df.astype(columns)
 
             # df.to_csv(os.path.join(os.path.dirname(__file__), "..", "data", f"prices_{ticker.lower()}.csv"), index = False)
+            plt.plot(df["timestamp"], df["close"], label = ticker)
 
             if min(df['low']) * (1 + risk_factor) > df['close'][0]:
                 recommendation = "BUY"
@@ -63,3 +65,7 @@ print("Buy recommendations are issued if the stock's latest closing price is les
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
+
+plt.xticks(rotation="vertical")
+plt.legend()
+plt.show()
