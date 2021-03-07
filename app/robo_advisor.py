@@ -8,6 +8,8 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 
+load_dotenv()
+
 def to_usd(price):
     return f"${price:,.2f}" 
 
@@ -44,7 +46,7 @@ while True:
             parsed_response = json.loads(response.text)
             df = pd.DataFrame.from_dict(parsed_response["Time Series (Daily)"], 'index')
         except:
-            print("Sorry, couldn't get any trading data for " + ticker + ".")
+            print("Couldn't get any trading data for " + ticker + ".")
             continue
 
         df.reset_index(inplace = True)
