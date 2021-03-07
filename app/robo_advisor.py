@@ -31,7 +31,7 @@ data = dict()
 
 while True:
     ticker = input("Input a ticker: ").upper()
-    if ticker == "":
+    if ticker == "" and data:
         break
     elif len(ticker) < 1 or len(ticker) > 5 or not ticker.isalpha():
         print("Expecting a properly-formed stock symbol like 'MSFT'. Try again.")
