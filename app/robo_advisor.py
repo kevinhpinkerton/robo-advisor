@@ -11,11 +11,22 @@ import matplotlib.pyplot as plt
 def to_usd(price):
     return f"${price:,.2f}" 
 
+def RiskTolerance():
+    try:
+        risk_tolerance = float(input("Input a risk tolerance (between 0 and 1): "))
+        if risk_tolerance <= 0 or risk_tolerance >= 1:
+            raise Exception()
+    except:
+        print("Expecting a decimal value like '0.2'. Try again.")
+        risk_tolerance = RiskTolerance()
+
+    return(risk_tolerance)
+risk_tolerance = RiskTolerance()
+
 print("Each ticker is inputted individually. Hit the return key once to continue, twice to finish.")
 
 api_key = os.getenv("ALPHAVANTAGE_API_KEY")
 columns = {'timestamp': 'datetime64[ns]', 'open': float, 'high': float, 'low': float, 'close': float, 'volume': int}
-risk_factor = .2
 data = dict()
 
 while True:
@@ -45,7 +56,7 @@ while True:
             year_high = max(df.query("@last_year < `timestamp` <= @latest_day")["high"])
             year_low = min(df.query("@last_year < `timestamp` <= @latest_day")["low"])
 
-            if year_low * (1 + risk_factor) > latest_close:
+            if year_low * (1 + risk_tolerance) > latest_close:
                 recommendation = "BUY"
             else:
                 recommendation = "DO NOT BUY"
@@ -68,7 +79,7 @@ print("REQUEST AT: {date:%Y-%m-%d %I:%M %p}".format(date=dt.datetime.now()))
 print("-------------------------")
 print(pd.DataFrame.from_dict(data, 'index'))
 print("-------------------------")
-print("Buy recommendations are issued if the stock's latest closing price is less than 20% above its recent low.")
+print("Buy recommendations are issued if the stock's latest closing price is less than {:.0%} above its 52-week low.".format(risk_tolerance))
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
